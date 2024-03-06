@@ -110,6 +110,7 @@ class ForestFire:
             
         cmap = mpl.colors.ListedColormap(['w', 'g', 'r'])
         ax.matshow(state, cmap=cmap, vmin=0, vmax=2)
+        plt.axis('off')
         
         return ax
     
@@ -117,7 +118,7 @@ class ForestFire:
         if ax is None:
             _, ax = plt.subplots()
         
-        ax.plot(range(self.number_of_steps), self.get_burn_tree_count())
+        ax.plot(range(len(self.get_burn_tree_count())), self.get_burn_tree_count())
         
         return ax  
     
@@ -163,7 +164,7 @@ class ForestFire:
 if __name__ == "__main__":
     
     forest_fire_automota = ForestFire()
-    for timestep in range(100000): # run for 100 "seasons"
+    for timestep in range(100000): # run for 100000 "seasons"
         forest_fire_automota.step()
         forest_fire_automota.log()
 
@@ -174,8 +175,7 @@ if __name__ == "__main__":
     forest_fire_automota.plot_time_series()
     
     # plot area scaling for forest fires
-    forest_fire_automota.plot_scaling()
-    
-    # make a gif (avoid using an unreasonably large number of timesteps)
-    # forest_fire_automota.make_gif() 
+    forest_fire_automota.plot_scaling() 
 
+
+# %%

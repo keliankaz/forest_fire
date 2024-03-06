@@ -2,4 +2,18 @@
 
 This is a quick implementation of the forest fire model. Here I am loosely following: https://doi.org/10.1016/S0031-9201(98)00167-8
 
-<img src="forest_fire_simulation_in_memory.gif" width="600" height="400">
+```python
+forest_fire_automota = ForestFire(
+    num_x=20,
+    num_y=20,
+    spark_frequency=1,
+    tree_frequency=5,
+)
+for timestep in range(10050): 
+    forest_fire_automota.step()
+    if timestep > 10000:
+        forest_fire_automota.log()
+forest_fire_automota.make_gif()
+```
+
+<img src="forest_fire_simulation_in_memory.gif" width="500" height="400">
