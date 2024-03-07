@@ -2,6 +2,9 @@
 
 This is a quick implementation of the forest fire model. Here I am loosely following: https://doi.org/10.1016/S0031-9201(98)00167-8
 
+1. Make sure you have the latest version of conda installed.
+1. Install the dependencies and create a new conda environment.
+
 ```python
 forest_fire_automota = ForestFire(
     num_x=20,

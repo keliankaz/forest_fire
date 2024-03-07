@@ -1,0 +1,6 @@
+name: forest_fire  
+dependencies:  
+  - matplotlib
+  - numpy
+  - scipy
+  - imageio
