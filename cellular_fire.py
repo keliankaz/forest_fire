@@ -5,6 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import imageio
 
+# TODO: make a more memory efficient record of the states using coo sparse?
 #%%
 
 class ForestFire:
@@ -17,6 +18,7 @@ class ForestFire:
     ) -> None:
         self.num_x = num_x
         self.num_y = num_y
+        self.mesh_x, self.mesh_y = np.meshgrid(np.arange(num_x), np.arange(num_y))
         self.tree_frequency = tree_frequency
         self.spark_frequency = spark_frequency
 
@@ -42,18 +44,17 @@ class ForestFire:
     def combine_tree_and_burn(self):
         return self.tree_grid + 2*self.burnt_grid
     
-    def step(self) -> None:
-        
-        self.burnt_grid = self.get_null_grid()
-        
+    def plant_trees(self):
         for _ in range(np.random.poisson(self.tree_frequency)):
             random_x,random_y = [np.random.randint(0,N) for N in [self.num_x, self.num_y]]
             self.tree_grid[random_x,random_y] = True
-        
+            
+    def drop_sparks(self):
         for _ in range(np.random.poisson(self.spark_frequency)):
             random_x,random_y = [np.random.randint(0,N) for N in [self.num_x, self.num_y]]
             self.fire_grid[random_x,random_y] = True
-    
+            
+    def burn(self):
         if np.any(self.fire_grid==1):
             self.burning = True
             while self.burning:
@@ -72,12 +73,19 @@ class ForestFire:
                         mode='same',
                     ) > 0).astype(int) # sparks neighbors
                 
-                
                 self.fire_grid = np.bitwise_and(possible_fire_grid, self.tree_grid)
                 
                 if not np.any(self.fire_grid): # stop fire
                     self.burning = False
-                    
+        
+    def step(self) -> None:
+        
+        self.burnt_grid = self.get_null_grid()
+        
+        self.plant_trees()
+        self.drop_sparks()
+        self.burn()
+        
         self.number_of_steps += 1
     
     def log(self, record_no_burn=False):
@@ -86,7 +94,7 @@ class ForestFire:
         elif np.any(self.burnt_grid):
             self.burn_record.append(self.burnt_grid)
             
-        self.tree_record.append(self.tree_grid.copy())
+        self.tree_record.append(self.tree_grid.copy())  
         
         self.record.append(self.combine_tree_and_burn())
     
@@ -138,6 +146,18 @@ class ForestFire:
         )
 
         return ax
+    
+    def plot_centroids(self, ax=None):
+        if ax is None:
+            _, ax = plt.subplots()
+            
+        ax.scatter(
+            [np.mean(self.mesh_x[fire]) for fire in self.burn_record],
+            [np.mean(self.mesh_y[fire]) for fire in self.burn_record],
+            s= self.get_burn_record_count(),
+            c='r', 
+            alpha=0.3,
+        )
                
     def make_gif(
         self,
@@ -187,6 +207,3 @@ if __name__ == "__main__":
     
     forest_fire_automata.make_gif('temp.gif')
     
-
-
-# %%
