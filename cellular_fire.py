@@ -65,9 +65,9 @@ class ForestFire:
                     convolve2d(
                         self.fire_grid,
                         np.array([
-                            [0,0,0],
-                            [0,1,1],
-                            [0,1,1],
+                            [0,1,0], # adapt kernel to simulate e.g. wind
+                            [1,1,1],
+                            [0,1,0],
                         ]),
                         mode='same',
                     ) > 0).astype(int) # sparks neighbors
@@ -163,29 +163,29 @@ class ForestFire:
 
 if __name__ == "__main__":
     
-    forest_fire_automota = ForestFire(
+    forest_fire_automata = ForestFire(
         spark_frequency=1,
         tree_frequency=24,
         num_x=128,
         num_y=128,
     )
     
-    number_of_timesteps = 1000
+    number_of_timesteps = 10000
     for timestep in range(number_of_timesteps): # run for 100000 "seasons"
-        forest_fire_automota.step()
-        if timestep > number_of_timesteps-200:
-            forest_fire_automota.log()
+        forest_fire_automata.step()
+        if timestep > number_of_timesteps-500:
+            forest_fire_automata.log()
 
     # plot the final state of the "forest"
-    forest_fire_automota.plot_state()
+    forest_fire_automata.plot_state()
     
     # plot a time series of the number of trees
-    forest_fire_automota.plot_time_series()
+    forest_fire_automata.plot_time_series()
     
     # plot area scaling for forest fires
-    forest_fire_automota.plot_scaling() 
+    forest_fire_automata.plot_scaling() 
     
-    forest_fire_automota.make_gif('temp.gif')
+    forest_fire_automata.make_gif('temp.gif')
     
 
 
