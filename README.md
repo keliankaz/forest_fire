@@ -5,6 +5,14 @@ This is a quick implementation of the forest fire model. Here I am loosely follo
 1. Make sure you have the latest version of conda installed.
 1. Install the dependencies and create a new conda environment.
 
+```bash
+cd forest_fire
+conda env create -f environment.yml
+conda acitvate forest_fire
+```
+
+## Examples
+
 ```python
 forest_fire_automota = ForestFire(
     num_x=20,
