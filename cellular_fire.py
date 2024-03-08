@@ -1,12 +1,12 @@
 #%% 
 import numpy as np
 from scipy.signal import convolve2d
+from scipy.ndimage import label
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import imageio
 
 # TODO: make a more memory efficient record of the states using coo sparse?
-#%%
 
 class ForestFire:
     def __init__(
@@ -21,6 +21,12 @@ class ForestFire:
         self.mesh_x, self.mesh_y = np.meshgrid(np.arange(num_x), np.arange(num_y))
         self.tree_frequency = tree_frequency
         self.spark_frequency = spark_frequency
+        
+        self.kernel = np.array([
+            [0,1,0],
+            [1,1,1],
+            [0,1,0],
+        ])
 
         # states: 
         self.burning = False
@@ -43,6 +49,45 @@ class ForestFire:
     
     def combine_tree_and_burn(self):
         return self.tree_grid + 2*self.burnt_grid
+    
+    def get_connected_components(
+        self, 
+        grid=None, 
+        kernel=None,
+    ):
+        # get connected 'islands' of trees, default to self.tree_grid but can be used as a static method.
+        # following: https://stackoverflow.com/questions/46737409/finding-connected-components-in-a-pixel-array
+        
+        # returns labeled_array, num_features
+        
+        # see also: https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.label.html
+        
+        if grid is None:
+            grid = self.tree_grid
+            
+        if kernel is None:
+            kernel = self.kernel
+        
+        return label(grid, kernel)
+        
+    def get_areas(
+        self, 
+        grid=None, 
+        kernel=None,
+    ):
+        
+        if grid is None:
+            grid = self.tree_grid
+            
+        if kernel is None:
+            kernel = self.kernel
+            
+        labeled_array, num_features = self.get_connected_components(grid, kernel)
+        
+        return [
+            np.sum(labeled_array.ravel()==i) 
+            for i in np.arange(num_features)+1 
+        ]
     
     def plant_trees(self):
         for _ in range(np.random.poisson(self.tree_frequency)):
@@ -130,19 +175,24 @@ class ForestFire:
         
         return ax  
     
-    def plot_scaling(self, ax=None):
-        
+    def plot_scaling(self, data=None, ax=None):
+        # note that Turcotte does not bin the data and therefore gets 
+        # seemingly different slopes. I confirmed that I can reproduce his
+        # plots if not binning.
         if ax is None:
             _, ax = plt.subplots()
+            
+        if data is None:
+            data = self.get_burn_record_count()
         
         bins = np.logspace(0,np.log10(self.area()), 20)    
-        ax.hist(self.get_burn_record_count(), bins=bins)
+        ax.hist(data, bins=bins, alpha=0.5)
 
         ax.set(
             xscale='log',
             yscale='log',
-            ylabel=r'$N_f$',
-            xlabel=r'$A_F$',
+            ylabel=r'$N$',
+            xlabel=r'$A$',
         )
 
         return ax
@@ -177,6 +227,8 @@ class ForestFire:
                 plt.close(fig)
             
         imageio.mimsave(file_name, images_memory, fps=fps)
+    
+    
         
          
 #%% 
@@ -184,17 +236,16 @@ class ForestFire:
 if __name__ == "__main__":
     
     forest_fire_automata = ForestFire(
-        spark_frequency=1,
-        tree_frequency=24,
-        num_x=128,
-        num_y=128,
+        spark_frequency=0.1,
+        tree_frequency=100,
+        num_x=2**6,
+        num_y=2**6,
     )
     
-    number_of_timesteps = 10000
+    number_of_timesteps = 50000
     for timestep in range(number_of_timesteps): # run for 100000 "seasons"
         forest_fire_automata.step()
-        if timestep > number_of_timesteps-500:
-            forest_fire_automata.log()
+        forest_fire_automata.log()
 
     # plot the final state of the "forest"
     forest_fire_automata.plot_state()
@@ -203,7 +254,8 @@ if __name__ == "__main__":
     forest_fire_automata.plot_time_series()
     
     # plot area scaling for forest fires
-    forest_fire_automata.plot_scaling() 
+    ax = forest_fire_automata.plot_scaling(forest_fire_automata.get_areas())
+    forest_fire_automata.plot_scaling(ax=ax)
     
-    forest_fire_automata.make_gif('temp.gif')
     
+# %%
